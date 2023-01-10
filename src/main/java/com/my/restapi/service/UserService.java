@@ -1,38 +1,39 @@
 package com.my.restapi.service;
 
 import com.my.restapi.dao.UserDao;
+import com.my.restapi.dto.UserDto;
+import com.my.restapi.dto.UserRegisterDto;
 import com.my.restapi.entity.User;
-import com.my.restapi.exception.AppException;
-import com.my.restapi.model.UserModel;
+import com.my.restapi.exception.EntityNotFoundException;
+import com.my.restapi.mapper.MapperUserRegisterDtoToUser;
+import com.my.restapi.mapper.MapperUserToUserDto;
+import com.my.restapi.validator.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserDao userDao;
+    private final UserValidator userValidator;
+    private final MapperUserToUserDto userToUserDto;
+    private final MapperUserRegisterDtoToUser userRegisterDtoToUser;
 
-    public User registerUser(User user) {
-        if (userDao.findByUsername(user.getUsername()) != null) {
-            throw new AppException("user with this login is already exist!");
-        }
+    public User registerUser(UserRegisterDto userDto) {
+        userValidator.validate(userDto);
+        User user = userRegisterDtoToUser.map(userDto);
         return userDao.save(user);
     }
 
-    public UserModel getUserById(Long id) {
-        Optional<User> user = userDao.findById(id);;
-        if (user.isEmpty()) {
-            throw new AppException("user does not exist!");
-        }
-        return UserModel.toModel(user.get());
+    public UserDto getUserById(Long id) {
+        User user = userDao.findById(id).orElseThrow(() -> new EntityNotFoundException("user " + id + " not found!"));
+        return userToUserDto.map(user);
     }
 
     public Long deleteUserById(Long id) {
-        if (userDao.findById(id).isEmpty()) {
-            throw new AppException("user does not exist!");
-        }
+        userDao.findById(id).orElseThrow(() -> new EntityNotFoundException("user with id " + id + " not found!"));
         userDao.deleteById(id);
         return id;
     }

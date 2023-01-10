@@ -1,8 +1,6 @@
 package com.my.restapi.entity;
 
 import lombok.*;
-import org.hibernate.Hibernate;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import javax.persistence.*;
 import java.util.Objects;
@@ -12,7 +10,9 @@ import java.util.Objects;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
+@Entity(name = "tasks")
+@Table(name = "tasks")
+
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,18 +23,16 @@ public class Task {
     @JoinColumn(name = "user_id")
     private User user;
 
-
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return id != null && Objects.equals(id, task.id);
+        return Objects.equals(id, task.id) && Objects.equals(title, task.title) && Objects.equals(completed, task.completed) && Objects.equals(user, task.user);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(id, title, completed, user);
     }
 }
